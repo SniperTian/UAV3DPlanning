@@ -90,7 +90,7 @@ class Area:
 
 if __name__ == "__main__":
     start_time = time.time()
-
+    
     targetRegion = Rectangle(486796, 4425988, 487679, 4426941)
     shpFilePath = "../data/Beijing_Buildings_DWG-Polygon.shp"
     myArea = Area(shpFilePath, targetRegion)
