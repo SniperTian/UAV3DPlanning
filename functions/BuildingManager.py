@@ -1,7 +1,20 @@
 import shapefile
 from shapely.geometry import Polygon
+#from osgeo import osr, ogr
 import time
 
+"""
+def UTM2WGS84(x, y, zoneNumber = 50, isNorthernHemisphere = True):
+    sSourceSrs = osr.SpatialReference()
+    sSourceSrs.SetUTM(zoneNumber, isNorthernHemisphere)
+    sTargetSrs = osr.SpatialReference()
+    sTargetSrs.ImportFromEPSG(4326)
+    sTransform = osr.CoordinateTransformation(sSourceSrs, sTargetSrs)
+    sPoint = ogr.Geometry(ogr.wkbPoint)
+    sPoint.AddPoint(x, y)
+    sPoint.Transform(sTransform)
+    return sPoint.GetX(), sPoint.GetY()
+"""
 class Point3D:
     def __init__(self, x, y, z):
         self._x = x
@@ -45,10 +58,10 @@ class Area:
 
     def FindPolygonsInTargetRegion(self, shpPolygons, recordsNum, targetRegionRect):
         sIdList = []
-        sXmin = targetRegion._x1
-        sXmax = targetRegion._x2
-        sYmin = targetRegion._y1
-        sYmax = targetRegion._y2
+        sXmin = targetRegionRect._x1
+        sXmax = targetRegionRect._x2
+        sYmin = targetRegionRect._y1
+        sYmax = targetRegionRect._y2
         for i in range(recordsNum):
             sPoints = shpPolygons[i].points
             sCurrentXmin = sPoints[0][0]
