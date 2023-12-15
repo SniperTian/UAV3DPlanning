@@ -35,8 +35,8 @@ function showBuildings(){
     var ne_wgs84 = coordtransform.gcj02towgs84(ne.getLng(),ne.getLat())
 
     var upload_data = {
-        "sw_wgs84": sw_wgs84,
-        "ne_wgs84": ne_wgs84,
+        "area_bounds" : [sw_wgs84[1],sw_wgs84[0],ne_wgs84[1],ne_wgs84[0]],
+        "area_bounds_namelist" : ["sw_lat","sw_lng","ne_lat","ne_lng"],
     }
     var showBuildings_url = "/routeplan3d/show-buildings"
     $.ajax({

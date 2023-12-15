@@ -1,17 +1,20 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from ..functions.BuildingManager import getBuildingList
 
 # Create your views here.
 def interface(request):
     return render(request,"routeplan3d/interface.html")
 
 def show_bulidings(request):
-    sw_wgs84 = request.POST["sw_wgs84"]
-    ne_wgs84 = request.POST["ne_wgs84"]
-    building_list = []
-    # building
-    # {}
+    buildingList = getBuildingList(request.POST["area_bounds"])
+    buildingListJson = []
+    for building in buildingList:
+        buildingListJson.append({
+            "polygon": building._polygon.exterior.coords[:],
+            "height": building._h,
+        })
     return JsonResponse({
         "success": True,
-        "building_list": building_list,
+        "building_list": buildingListJson,
     })

@@ -14,6 +14,17 @@ def UTM2WGS84(x, y, zoneNumber = 50, isNorthernHemisphere = True):
     sPoint.AddPoint(x, y)
     sPoint.Transform(sTransform)
     return sPoint.GetX(), sPoint.GetY()
+#lat:纬度, lng:经度
+def WGS842UTM(lat, lng, zoneNumber = 50, isNorthernHemisphere = True):
+    sSourceSrs = osr.SpatialReference()
+    sSourceSrs.ImportFromEPSG(4326)
+    sTargetSrs = osr.SpatialReference()
+    sTargetSrs.SetUTM(zoneNumber, isNorthernHemisphere)
+    sTransform = osr.CoordinateTransformation(sSourceSrs, sTargetSrs)
+    sPoint = ogr.Geometry(ogr.wkbPoint)
+    sPoint.AddPoint(lat, lng)
+    sPoint.Transform(sTransform)
+    return sPoint.GetX(), sPoint.GetY()
 """
 class Point3D:
     def __init__(self, x, y, z):
@@ -100,6 +111,13 @@ class Area:
                 for j in range(len(sIntersection.geoms)):
                     sBuilding = Building(sIntersection.geoms[j], ZList[i])
                     self._BuildingsList.append(sBuilding)
+
+def getBuildingList(bounds):
+    targetRegion = Rectangle(bounds[0],bounds[1],bounds[2],bounds[3])
+    shpFilePath = "../data/Beijing_Buildings_DWG-Polygon.shp"
+    myArea = Area(shpFilePath,targetRegion)
+    buildingList = myArea._BuildingsList
+    return buildingList
 
 if __name__ == "__main__":
     start_time = time.time()
