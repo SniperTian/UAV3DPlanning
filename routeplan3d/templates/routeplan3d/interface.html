@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!--加载 JQuery-->
+        <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+        <!--加载 JQuery-->
+
+        <!--加载 高德JSAPI-->
+        <script type="text/javascript">
+            window._AMapSecurityConfig = {
+              securityJsCode: "d496fd41c07abd704de603a1478c7343",
+            };
+          </script>
+        <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=e4106308c97d5537b23c4e3ec02d3f53"></script>
+        <!--加载 高德JSAPI-->
+
+        <!--加载 CSS样式-->
+            <!--高德默认样式-->
+            <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+            <!--Django静态文件调用-->
+            {% load static %} 
+            <link rel="stylesheet" type="text/css" href="/static/routeplan3d/mystyle.css" >
+        <!--加载 CSS样式-->
+
+        <!--加载脚本-->
+        <script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+        <script type="text/javascript" src="/static/routeplan3d/scripts/event.js"></script>
+        <script type="text/javascript" src="/static/routeplan3d/scripts/map.js"></script>
+        <script type="text/javascript" src="/static/routeplan3d/scripts/function.js"></script>
+        <!--加载脚本-->
+    </head>
+    <body>
+        <div class="container">
+            <div id="map"></div>
+            <div class="input-card" style="width: 140px; bottom:unset; top: 140px;">
+                <h4 style="margin-bottom: 10px; font-weight: 600">选择航摄区域</h4>
+                <button class="btn" id="chooseArea" style="margin-bottom: 5px">矩形选区</button> 
+            </div>
+        </div>
+        <p>hhh</p>
+    </body>
+</html>
