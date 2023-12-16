@@ -3,7 +3,6 @@ from shapely.geometry import Polygon
 from osgeo import gdal, osr, ogr
 import numpy as np
 import math
-import time
 
 def UTM2WGS84(x, y, zoneNumber = 50, isNorthernHemisphere = True):
     sSourceSrs = osr.SpatialReference()
@@ -33,6 +32,7 @@ class Point3D:
         self._x = x
         self._y = y
         self._z = z
+        self._lat, self._lng = UTM2WGS84(x, y)
 
 #(x1,y1)为左下角点坐标, (x2,y2)为右上角点坐标
 class Rectangle:
@@ -62,25 +62,28 @@ class Building:
         return sxx.tolist()[:-1], syy.tolist()[:-1]
 
 class Area:
-    def __init__(self, shpFilePath, targetRegionRect):
+    def __init__(self):
         self._buildingsList = []
-        self._targetRegion = targetRegionRect
-        self._originX = targetRegionRect._x1 #平移原点原来的坐标X
-        self._originY = targetRegionRect._y1 #平移原点原来的坐标Y
-        self._newTargetRegion = Rectangle(0, 0, targetRegionRect._x2 - targetRegionRect._x1,
-                                          targetRegionRect._y2 - targetRegionRect._y1) #平移原点后新的测图区域
+        self._targetRegion = None
+        self._originX = None #平移原点原来的坐标X
+        self._originY = None #平移原点原来的坐标Y
+        self._newTargetRegion = None #平移原点后新的测图区域
         self._newBuildingsList = [] #平移原点后的建筑序列
-        shpFile = shapefile.Reader(shpFilePath)
-        sRecordsNum = shpFile.numRecords
-        sShapes = shpFile.shapes()
-        sIdList = self.FindPolygonsInTargetRegion(sShapes, sRecordsNum, targetRegionRect)
+    
+    def UpdateTargetRegion(self, originalShpFile, originalShapes, originalRecordsNum, targetRegionRect):
+        self._targetRegion = targetRegionRect
+        self._originX = targetRegionRect._x1
+        self._originY = targetRegionRect._y1
+        self._newTargetRegion = Rectangle(0, 0, targetRegionRect._x2 - targetRegionRect._x1,
+                                          targetRegionRect._y2 - targetRegionRect._y1)
+        sIdList = self.FindPolygonsInTargetRegion(originalShapes, originalRecordsNum, targetRegionRect)
         sZList = []
         for i in range(len(sIdList)):
-            sZList.append(shpFile.record(sIdList[i])[6])
-        self.CroppingUsingTargetRegion(sShapes, sIdList, sZList, targetRegionRect)
+            sZList.append(originalShpFile.record(sIdList[i])[6])
+        self._buildingsList = []
+        self._newBuildingsList = []
+        self.CroppingUsingTargetRegion(originalShapes, sIdList, sZList, targetRegionRect)
         self.TranslateBuildings()
-        del sShapes
-        del shpFile
 
     def FindPolygonsInTargetRegion(self, shpPolygons, recordsNum, targetRegionRect):
         sIdList = []
@@ -137,6 +140,8 @@ class Area:
             self._newBuildingsList.append(snewBuilding)
 
     def Polygon2Raster(self, resolution):
+        if(len(self._buildingsList) == 0):
+            raise Exception("No buildings found!")
         #(1)创建矢量图层并保存
         sTempShpFile = shapefile.Writer("./temp/tempPolygon.shp")
         sTempShpFile.field('Elevation', 'F', '19')
@@ -179,24 +184,3 @@ class Area:
         sRasterData = sTempRaster.ReadAsArray(0, 0, swidth, sheight)
         del sTempRaster
         return sRasterData
-
-
-def getBuildingList(bounds):
-    targetRegion = Rectangle(bounds[0], bounds[1], bounds[2], bounds[3])
-    shpFilePath = "../data/Beijing_Buildings_DWG-Polygon.shp"
-    myArea = Area(shpFilePath, targetRegion)
-    buildingList = myArea._BuildingsList
-    return buildingList
-
-if __name__ == "__main__":
-    start_time = time.time()
-
-    targetRegion = Rectangle(486796, 4425988, 487679, 4426941)
-    shpFilePath = "./data/Beijing_Buildings_DWG-Polygon.shp"
-    myArea = Area(shpFilePath, targetRegion)
-    resolution = 2
-    data = myArea.Polygon2Raster(resolution)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"执行时间为：{elapsed_time}秒")
