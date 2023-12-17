@@ -32,7 +32,6 @@ class Point3D:
         self._x = x
         self._y = y
         self._z = z
-        self._lat, self._lng = UTM2WGS84(x, y)
 
 #(x1,y1)为左下角点坐标, (x2,y2)为右上角点坐标
 class Rectangle:
