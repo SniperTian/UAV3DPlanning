@@ -36,14 +36,18 @@ function showBuildings(){
 }
 
 function getBuildings(areaBounds){
-    var sw = areaBounds.getSouthWest()
-    var ne = areaBounds.getNorthEast()
+    var sw = areaBounds.getSouthWest() //SouthWest
+    var ne = areaBounds.getNorthEast() //NorthEast
     // 选区边界坐标转换 gcj02 -> wgs84
     var sw_wgs84 = coordtransform.gcj02towgs84(sw.getLng(),sw.getLat())
     var ne_wgs84 = coordtransform.gcj02towgs84(ne.getLng(),ne.getLat())
     var upload_data = {
-        "area_bounds" : [sw_wgs84[1],sw_wgs84[0],ne_wgs84[1],ne_wgs84[0]],
-        "area_bounds_namelist" : ["sw_lat","sw_lng","ne_lat","ne_lng"],
+        "area_bounds" : {
+            "sw_lng" : sw_wgs84[0],
+            "sw_lat" : sw_wgs84[1],
+            "ne_lng" : ne_wgs84[0],
+            "ne_lat" : ne_wgs84[1],
+        },
     }
     var getBuildings_url = "/routeplan3d/get-buildings"
     var buildingList_wgs84;
