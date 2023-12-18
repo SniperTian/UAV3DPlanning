@@ -1,9 +1,9 @@
 import shapefile
 from shapely.geometry import Polygon
-#from osgeo import osr, ogr
+from osgeo import osr, ogr
 import time
 
-"""
+
 def UTM2WGS84(x, y, zoneNumber = 50, isNorthernHemisphere = True):
     sSourceSrs = osr.SpatialReference()
     sSourceSrs.SetUTM(zoneNumber, isNorthernHemisphere)
@@ -14,6 +14,7 @@ def UTM2WGS84(x, y, zoneNumber = 50, isNorthernHemisphere = True):
     sPoint.AddPoint(x, y)
     sPoint.Transform(sTransform)
     return sPoint.GetX(), sPoint.GetY()
+
 #lat:纬度, lng:经度
 def WGS842UTM(lat, lng, zoneNumber = 50, isNorthernHemisphere = True):
     sSourceSrs = osr.SpatialReference()
@@ -25,7 +26,7 @@ def WGS842UTM(lat, lng, zoneNumber = 50, isNorthernHemisphere = True):
     sPoint.AddPoint(lat, lng)
     sPoint.Transform(sTransform)
     return sPoint.GetX(), sPoint.GetY()
-"""
+
 class Point3D:
     def __init__(self, x, y, z):
         self._x = x
@@ -113,11 +114,28 @@ class Area:
                     self._BuildingsList.append(sBuilding)
 
 def getBuildingList(bounds):
-    targetRegion = Rectangle(bounds[0],bounds[1],bounds[2],bounds[3])
+    # 获取边界并转化为投影坐标系
+    sw_utm = WGS842UTM(bounds[0],bounds[1])
+    ne_utm = WGS842UTM(bounds[2],bounds[3])
+    targetRegion = Rectangle(sw_utm[0],sw_utm[1],ne_utm[0],ne_utm[1])
     shpFilePath = "../data/Beijing_Buildings_DWG-Polygon.shp"
     myArea = Area(shpFilePath,targetRegion)
-    buildingList = myArea._BuildingsList
-    return buildingList
+    buildingList_utm = myArea._BuildingsList
+    buildingList_wgs84 = []
+    for building in buildingList_utm:
+        polygonExterior_utm = building._polygon.exterior.coords[:]
+        polygonExterior_wgs84 = []
+        for point in polygonExterior_utm:
+            point_lat,point_lng = UTM2WGS84(point[0],point[1])
+            polygonExterior_wgs84.append({
+                "lat":point_lat,
+                "lng":point_lng
+            })
+        buildingList_wgs84.append({
+            "polygonExterior_wgs84" : polygonExterior_wgs84,
+            "height": building._h, 
+        })
+    return buildingList_wgs84
 
 if __name__ == "__main__":
     start_time = time.time()

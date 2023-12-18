@@ -2,6 +2,7 @@ var map;//地图
 var mouseTool;//鼠标工具
 var photoArea = null;//航摄区域
 var buildingLayer = null;//3D建筑显示
+var buildingList;//建筑数据
 
 function bind_events(){
     // 绑定鼠标工具事件

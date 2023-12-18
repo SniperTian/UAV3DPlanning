@@ -6,15 +6,9 @@ from ..functions.BuildingManager import getBuildingList
 def interface(request):
     return render(request,"routeplan3d/interface.html")
 
-def show_bulidings(request):
-    buildingList = getBuildingList(request.POST["area_bounds"])
-    buildingListJson = []
-    for building in buildingList:
-        buildingListJson.append({
-            "polygon": building._polygon.exterior.coords[:],
-            "height": building._h,
-        })
+def get_bulidings(request):
+    buildingList_wgs84 = getBuildingList(request.POST["area_bounds"])
     return JsonResponse({
         "success": True,
-        "building_list": buildingListJson,
+        "building_list": buildingList_wgs84,
     })
