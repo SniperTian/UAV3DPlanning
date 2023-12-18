@@ -1,8 +1,8 @@
 import shapefile
 from shapely.geometry import Polygon
-from osgeo import osr, ogr
-import time
-
+from osgeo import gdal, osr, ogr
+import numpy as np
+import math
 
 def UTM2WGS84(x, y, zoneNumber = 50, isNorthernHemisphere = True):
     sSourceSrs = osr.SpatialReference()
@@ -55,18 +55,34 @@ class Building:
         self._polygon = polygon
         self._h = height
 
+    #获取polygon的XY坐标序列(从第1个点到最后1个点)
+    def GetXYCoords(self):
+        sxx, syy = self._polygon.exterior.coords.xy
+        return sxx.tolist()[:-1], syy.tolist()[:-1]
+
 class Area:
-    def __init__(self, shpFilePath, targetRegionRect):
-        self._BuildingsList = []
-        shpFile = shapefile.Reader(shpFilePath)
-        sRecordsNum = shpFile.numRecords
-        sShapes = shpFile.shapes()
-        sIdList = self.FindPolygonsInTargetRegion(sShapes, sRecordsNum, targetRegionRect)
+    def __init__(self):
+        self._buildingsList = []
+        self._targetRegion = None
+        self._originX = None #平移原点原来的坐标X
+        self._originY = None #平移原点原来的坐标Y
+        self._newTargetRegion = None #平移原点后新的测图区域
+        self._newBuildingsList = [] #平移原点后的建筑序列
+    
+    def UpdateTargetRegion(self, originalShpFile, originalShapes, originalRecordsNum, targetRegionRect):
+        self._targetRegion = targetRegionRect
+        self._originX = targetRegionRect._x1
+        self._originY = targetRegionRect._y1
+        self._newTargetRegion = Rectangle(0, 0, targetRegionRect._x2 - targetRegionRect._x1,
+                                          targetRegionRect._y2 - targetRegionRect._y1)
+        sIdList = self.FindPolygonsInTargetRegion(originalShapes, originalRecordsNum, targetRegionRect)
         sZList = []
         for i in range(len(sIdList)):
-            sZList.append(shpFile.record(sIdList[i])[6])
-        self.CroppingUsingTargetRegion(sShapes, sIdList, sZList, targetRegionRect)
-        pass
+            sZList.append(originalShpFile.record(sIdList[i])[6])
+        self._buildingsList = []
+        self._newBuildingsList = []
+        self.CroppingUsingTargetRegion(originalShapes, sIdList, sZList, targetRegionRect)
+        self.TranslateBuildings()
 
     def FindPolygonsInTargetRegion(self, shpPolygons, recordsNum, targetRegionRect):
         sIdList = []
@@ -107,43 +123,63 @@ class Area:
             sIntersection = sRegionPolygon.intersection(sCurrentPolygon)
             if(sIntersection.geom_type == "Polygon"):
                 sBuilding = Building(sIntersection, ZList[i])
-                self._BuildingsList.append(sBuilding)
+                self._buildingsList.append(sBuilding)
             else: #MultiPolygon
                 for j in range(len(sIntersection.geoms)):
                     sBuilding = Building(sIntersection.geoms[j], ZList[i])
-                    self._BuildingsList.append(sBuilding)
+                    self._buildingsList.append(sBuilding)
 
-def getBuildingList(bounds):
-    # 获取边界并转化为投影坐标系
-    sw_utm = WGS842UTM(bounds[0],bounds[1])
-    ne_utm = WGS842UTM(bounds[2],bounds[3])
-    targetRegion = Rectangle(sw_utm[0],sw_utm[1],ne_utm[0],ne_utm[1])
-    shpFilePath = "../data/Beijing_Buildings_DWG-Polygon.shp"
-    myArea = Area(shpFilePath,targetRegion)
-    buildingList_utm = myArea._BuildingsList
-    buildingList_wgs84 = []
-    for building in buildingList_utm:
-        polygonExterior_utm = building._polygon.exterior.coords[:]
-        polygonExterior_wgs84 = []
-        for point in polygonExterior_utm:
-            point_lat,point_lng = UTM2WGS84(point[0],point[1])
-            polygonExterior_wgs84.append({
-                "lat":point_lat,
-                "lng":point_lng
-            })
-        buildingList_wgs84.append({
-            "polygonExterior_wgs84" : polygonExterior_wgs84,
-            "height": building._h, 
-        })
-    return buildingList_wgs84
+    def TranslateBuildings(self):
+        for i in range(len(self._buildingsList)):
+            sXList, sYList = self._buildingsList[i].GetXYCoords()
+            snewXList = [item - self._originX for item in sXList]
+            snewYList = [item - self._originY for item in sYList]
+            snewPolygon = Polygon(zip(snewXList, snewYList))
+            snewBuilding = Building(snewPolygon, self._buildingsList[i]._h)
+            self._newBuildingsList.append(snewBuilding)
 
-if __name__ == "__main__":
-    start_time = time.time()
-    
-    targetRegion = Rectangle(486796, 4425988, 487679, 4426941)
-    shpFilePath = "../data/Beijing_Buildings_DWG-Polygon.shp"
-    myArea = Area(shpFilePath, targetRegion)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"执行时间为：{elapsed_time}秒")
+    def Polygon2Raster(self, resolution):
+        if(len(self._buildingsList) == 0):
+            raise Exception("No buildings found!")
+        #(1)创建矢量图层并保存
+        sTempShpFile = shapefile.Writer("./temp/tempPolygon.shp")
+        sTempShpFile.field('Elevation', 'F', '19')
+        for i in range(len(self._newBuildingsList)):
+            sXList, sYList = self._newBuildingsList[i].GetXYCoords()
+            sTempList = []
+            for j in range(len(sXList)):
+                sTempList.append([sXList[j], sYList[j]])
+            sTempShpFile.poly([sTempList])
+            sTempShpFile.record(self._newBuildingsList[i]._h)
+        sTempShpFile.close()
+        #(2)创建raster图层
+        stxtFile = open("./temp/projection.txt")
+        sprojection = stxtFile.read()
+        swidth = math.ceil(self._newTargetRegion._x2 / resolution)
+        sheight = math.ceil(self._newTargetRegion._y2 / resolution)
+        sgeotrans = (0, resolution, 0, self._newTargetRegion._y2, 0, -resolution) #设置仿射矩阵信息
+        sTempRaster = gdal.GetDriverByName('GTiff').Create(
+            utf8_path = "./temp/tempRaster.tif",  #栅格地址
+            xsize = swidth,  #栅格宽
+            ysize = sheight,  #栅格高
+            bands = 1,  #栅格波段数
+            eType = gdal.GDT_Float32  #栅格数据类型
+        )
+        sTempRaster.SetGeoTransform(sgeotrans) #将参考栅格的仿射变换信息设置为结果栅格仿射变换信息
+        sTempRaster.SetProjection(sprojection) #设置投影坐标信息
+        sband = sTempRaster.GetRasterBand(1)
+        sband.SetNoDataValue(0) #设置背景nodata数值
+        sband.FlushCache()
+        #(3)矢量转栅格
+        sTempShape = ogr.Open("./temp/tempPolygon.shp") #读取shp文件
+        sShpLayer = sTempShape.GetLayer() #获取图层文件对象
+        # 栅格化函数
+        gdal.RasterizeLayer(
+            dataset = sTempRaster,  # 输出的栅格数据集
+            bands = [1],  # 输出波段
+            layer = sShpLayer,  # 输入待转换的矢量图层
+            options = [f"ATTRIBUTE={'Elevation'}"]  # 指定字段值为栅格值
+        )
+        sRasterData = sTempRaster.ReadAsArray(0, 0, swidth, sheight)
+        del sTempRaster
+        return sRasterData
