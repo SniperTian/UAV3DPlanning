@@ -160,3 +160,22 @@ class Area:
         sRasterData = sTempRaster.ReadAsArray(0, 0, swidth, sheight)
         del sTempRaster
         return sRasterData
+    
+    def ExportBuildingsInfo(self):
+        if(len(self._buildingsList) == 0):
+            raise Exception("No buildings found!")
+        sbuildingsInfo = []
+        for item in self._buildingsList:
+            spolygonInfo = []
+            sxList, syList = item.GetXYCoords()
+            spointsNum = len(sxList)
+            for i in range(spointsNum):
+                spolygonInfo.append({
+                    "X" : sxList[i],
+                    "Y" : syList[i]
+                    })
+            sbuildingsInfo.append({
+                "polygonInfo" : spolygonInfo,
+                "height" : item._h
+                })
+        return sbuildingsInfo

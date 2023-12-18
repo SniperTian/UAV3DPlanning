@@ -14,6 +14,9 @@ class UAV3DPlanning:
     def SetTargetArea(self, targetRegionRect):
         self._area.UpdateTargetRegion(self._shpFile, self._shapes, self._recordsNum, targetRegionRect)
     
+    def GetBuildingsInfo(self):
+        return self._area.ExportBuildingsInfo()
+    
     # 获取研究区高程栅格
     def GetHeightRaster(self):
         return self._area.Polygon2Raster(self._resolution)
@@ -36,5 +39,6 @@ if __name__ == "__main__":
     
     targetRegion1 = BM.Rectangle(486796, 4425988, 487679, 4426941)
     uavRoutePlan.SetTargetArea(targetRegion1)
+    print(uavRoutePlan.GetBuildingsInfo())
     data1 = uavRoutePlan.GetHeightRaster()
     
