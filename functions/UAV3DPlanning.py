@@ -1,4 +1,4 @@
-import BuildingManager as BM
+from . import BuildingManager as BM
 import shapefile
 import numpy as np
 import time

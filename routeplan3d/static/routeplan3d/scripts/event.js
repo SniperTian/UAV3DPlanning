@@ -8,6 +8,7 @@ function bind_events(){
     // 绑定鼠标工具事件
     mouseTool.on('draw', mouseTool_draw);
     $("button#chooseArea").click(function(){chooseArea();})
+    $("button#showBuildings").click(function(){showBuildings();})
 }
 
 $(document).ready(function(){
