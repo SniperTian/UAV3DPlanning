@@ -31,13 +31,13 @@ class UAV3DPlanning:
 
 if __name__ == "__main__":
     start_time = time.time()
-    shpFilePath = "./data/Beijing_Buildings_DWG-Polygon.shp"
+    shpFilePath = "./data/PKnew.shp"
     uavRoutePlan = UAV3DPlanning(shpFilePath)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"加载完毕, 执行时间为：{elapsed_time}秒")
     
-    targetRegion1 = BM.Rectangle(486796, 4425988, 487679, 4426941)
+    targetRegion1 = BM.Rectangle(440180, 4426238, 441032, 4427526)
     uavRoutePlan.SetTargetArea(targetRegion1)
     print(uavRoutePlan.GetBuildingsInfo())
     data1 = uavRoutePlan.GetHeightRaster()
