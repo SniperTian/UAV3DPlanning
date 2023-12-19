@@ -5,14 +5,30 @@
         <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
         <!--加载 JQuery-->
+        
+        <!--加载 Three-->
+        <script src="https://cdn.jsdelivr.net/npm/three@0.142/build/three.js"></script>
+        <!--加载 Three-->
 
         <!--加载 高德JSAPI-->
         <script type="text/javascript">
+            gaode_code = {
+                "chl":{
+                    "key": "e4106308c97d5537b23c4e3ec02d3f53",
+                    "scode":"d496fd41c07abd704de603a1478c7343",
+                },
+                "wyh":{
+                    "key": "8a1f6da2e414d39bf93797837a969527",
+                    "scode":"62ff514d118e21102172439fd7d59f5a"
+                }
+            } 
+        </script>
+        <script type="text/javascript">
             window._AMapSecurityConfig = {
-              securityJsCode: "d496fd41c07abd704de603a1478c7343",
+              securityJsCode: "62ff514d118e21102172439fd7d59f5a",
             };
           </script>
-        <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=e4106308c97d5537b23c4e3ec02d3f53"></script>
+        <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=8a1f6da2e414d39bf93797837a969527"></script>
         <!--加载 高德JSAPI-->
 
         <!--加载 CSS样式-->
@@ -28,6 +44,7 @@
         <script type="text/javascript" src="/static/routeplan3d/scripts/event.js"></script>
         <script type="text/javascript" src="/static/routeplan3d/scripts/map.js"></script>
         <script type="text/javascript" src="/static/routeplan3d/scripts/function.js"></script>
+        <script type="text/javascript" src="/static/routeplan3d/scripts/coordtransform.js"></script>
         <!--加载脚本-->
     </head>
     <body>
@@ -39,7 +56,7 @@
             </div>
             <div class="input-card" style="width: 140px; bottom:unset; top: 240px;">
                 <h4 style="margin-bottom: 10px; font-weight: 600">显示建筑模型</h4>
-                <button class="btn" id="showBuildings" style="margin-bottom: 5px">点击显示</button> 
+                <button class="btn" id="showBuildings" style="margin-bottom: 5px">{% csrf_token %}点击显示</button> 
             </div>
         </div>
         <p>hhh</p>
