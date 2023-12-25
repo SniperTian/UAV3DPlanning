@@ -178,4 +178,4 @@ class Area:
                 "polygonInfo" : spolygonInfo,
                 "height" : item._h
                 })
-        return sbuildingsInfo
+        return sbuildingsInfo    
