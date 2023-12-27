@@ -9,7 +9,7 @@ class UAV():
         self.z = z
 
         # 初始化无人机目标的坐标和所处环境
-        self.target = [env.target[0].x, env.target[0].y, env.target[0].z]
+        self.target = [env.target[0][0], env.target[0][1], env.target[0][2]]
         self.environment = env
 
         #初始化运动情况
@@ -23,7 +23,8 @@ class UAV():
         self.distance_to_target = abs(self.x-self.target[0])+abs(self.y-self.target[1])+abs(self.z-self.target[2]) # 无人机当前距离目标点曼哈顿距离
         self.distance_to_destination = abs(self.x-self.target[0])+abs(self.y-self.target[1])+abs(self.z-self.target[2]) # 无人机初始状态距离终点的曼哈顿距离
         self.step = 0 # 无人机已走步数
-    
+        self.track = [(self.x,self.y,self.z)]
+
     def calculate(self, num):
         # 利用动作值计算运动改变量
         if num == 0:
@@ -80,6 +81,7 @@ class UAV():
         self.x = self.x + dx
         self.y = self.y + dy
         self.z = self.z + dz
+        self.track.append((self.x,self.y,self.z))
         delta_distance = self.distance_to_target - (abs(self.x-self.target[0])+abs(self.y-self.target[1])+abs(self.z-self.target[2])) # 正代表接近目标，负代表远离目标
         self.distance_to_target = abs(self.x-self.target[0])+abs(self.y-self.target[1])+abs(self.z-self.target[2]) # 更新距离值
         self.step = self.step + abs(dx) + abs(dy) + abs(dz)
@@ -122,6 +124,8 @@ class UAV():
         else:
             r_target=4*(self.distance_to_destination)*delta_distance
 
+
+
         # 计算总奖励
         r = r_climb + r_target - crash * self.crash_probability
 
@@ -129,9 +133,10 @@ class UAV():
         if self.x<=0 or self.x>=self.environment.width-1 or self.y<=0 or self.y>=self.environment.length-1 or self.z<=0 or self.z>=self.environment.map_height-1 or self.environment.map[self.x,self.y,self.z]==1 or random.random()<self.crash_probability:
             #发生碰撞，产生巨大惩罚
             return r-400,True,2
-        if self.distance_to_target<=5:
+        if self.distance_to_target <= 5:
             #到达目标点，给予f大量奖励
-            return r+500,True,1
+            r_step = self.step - self.distance_to_destination
+            return r+500-r_step,True,1
         if self.step>=self.distance_to_destination+2*self.environment.map_height:
             #步数超过最差步长，给予惩罚
             return r-100,True,5

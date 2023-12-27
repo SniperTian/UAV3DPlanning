@@ -9,19 +9,12 @@ from  torch.autograd import Variable
 #from replay_buffer import ReplayMemory, Transitio
 from UAV import *
 from model import QNetwork
-from osgeo import gdal, osr, ogr
+from osgeo import gdal
 from ReplayBuffer import ReplayMemory, Transition
 
 use_cuda = torch.cuda.is_available()
 FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 device = torch.device("cuda" if use_cuda else "cpu")    #使用GPU进行训练
-
-class Point3D:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
 
 class Environment(object):
     def __init__(self, map, n_states, n_actions, LEARNING_RATE):
@@ -47,7 +40,7 @@ class Environment(object):
         self.optim = optim.Adam(self.q_local.parameters(), lr=LEARNING_RATE)   #设置优化器，使用adam优化器
         self.n_states = n_states     #状态空间数目
         self.n_actions = n_actions    #动作集数目
-        self.replay_memory = ReplayMemory(10000)   #初始化经验池
+        self.replay_memory = ReplayMemory(10000)   #初o始化经验池
 
     def get_action(self, state, eps, check_eps=True):
         global steps_done
@@ -112,7 +105,7 @@ class Environment(object):
             z = random.randint(3,self.max_height)
             if self.map[x,y,z]==0:
                 break
-        self.target=[Point3D(x,y,z)]
+        self.target=[(x,y,z)]
 
         # 随机生成无人机位置
         for i in range(self.n_uav):
@@ -131,12 +124,29 @@ class Environment(object):
         self.state = np.vstack([uav.state() for (_, uav) in enumerate(self.uavs)])
 
         return self.state
+    
+    def reset_test(self,uav_x,uav_y,uav_z,dest_x,dest_y,dest_z):
+        self.uavs = []
+
+        if self.map[uav_x,uav_y,uav_z]==1:
+            raise Exception("Start point coincides with a building.")
+        if self.map[dest_x,dest_y,dest_z]==1:
+            raise Exception("Target point coincides with a building.")
+        self.target=[(dest_x,dest_y,dest_z)]
+        for i in range(self.n_uav):
+            self.uavs.append(UAV(uav_x,uav_y,uav_z,self))
+        #self.uavs.append(UAV(uav_x,uav_y,uav_z,self))
+        # 更新无人机状态
+        self.state = np.vstack([uav.state() for (_, uav) in enumerate(self.uavs)])
+
+        return self.state
 
 
 if __name__ == '__main__':
-    map_path = 'functions/temp/tempRaster.tif'
+    map_path = 'functions/DQN/PKU.tif'
     datasets = gdal.Open(map_path)
     map_data = datasets.ReadAsArray()
     env=Environment(map_data,42,27,0.0004)
     state = env.reset()
-    print(state.shape)
+    print(env.width)
+    print(env.length)
