@@ -7,8 +7,12 @@ var buildingList;//建筑数据
 function bind_events(){
     // 绑定鼠标工具事件
     mouseTool.on('draw', mouseTool_draw);
-    $("button#chooseArea").click(function(){chooseArea();})
-    $("button#showBuildings").click(function(){showBuildings();})
+    $("button#chooseArea").click(function(){chooseArea()});
+    $("input#showArea").click(function(){showArea()});
+    $("input#hideArea").click(function(){hideArea()});
+    $("button#loadBuildings").click(function(){loadBuildings()});
+    $("input#showBuildings").click(function(){showBuildings()});
+    $("input#hideBuildings").click(function(){hideBuildings()});
 }
 
 $(document).ready(function(){

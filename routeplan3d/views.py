@@ -9,7 +9,8 @@ from functions.CoordTransform import UTM2WGS84,WGS842UTM
 
 
 photoArea = None
-shpFile_path = "data/Beijing_Buildings_DWG-Polygon.shp"
+#shpFile_path = "data/Beijing_Buildings_DWG-Polygon.shp"
+shpFile_path = "data_UTM/PKnew.shp"
 photoArea = UAV3DPlanning(shpFile_path)
 
 # Create your views here.
@@ -34,9 +35,9 @@ def get_bulidings(request):
         lng = float(areaBounds_wgs84[2]),
         lat = float(areaBounds_wgs84[3]),
         )
-    print(sw_utm[0],sw_utm[1],ne_utm[0],ne_utm[1])
-    #targetRegion = Rectangle(sw_utm[1],sw_utm[0],ne_utm[1],ne_utm[0])
-    targetRegion = Rectangle(486796, 4425988, 487679, 4426941)
+    #print(sw_utm[0],sw_utm[1],ne_utm[0],ne_utm[1])
+    targetRegion = Rectangle(sw_utm[1],sw_utm[0],ne_utm[1],ne_utm[0])
+    #targetRegion = Rectangle(440180，4426238，441032，4427526)
     photoArea.SetTargetArea(targetRegion)
     buildingList_utm = photoArea.GetBuildingsInfo()
     buildingList_wgs84 = [{

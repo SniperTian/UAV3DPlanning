@@ -25,10 +25,10 @@
         </script>
         <script type="text/javascript">
             window._AMapSecurityConfig = {
-              securityJsCode: "62ff514d118e21102172439fd7d59f5a",
+              securityJsCode: "d496fd41c07abd704de603a1478c7343",
             };
           </script>
-        <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=8a1f6da2e414d39bf93797837a969527"></script>
+        <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=e4106308c97d5537b23c4e3ec02d3f53"></script>
         <!--加载 高德JSAPI-->
 
         <!--加载 CSS样式-->
@@ -51,14 +51,27 @@
         <div class="container">
             <div id="map"></div>
             <div class="input-card" style="width: 140px; bottom:unset; top: 140px;">
-                <h4 style="margin-bottom: 10px; font-weight: 600">选择航摄区域</h4>
-                <button class="btn" id="chooseArea" style="margin-bottom: 5px">矩形选区</button> 
+                <button class="btn" id="chooseArea" style="margin-bottom: 5px">选择航摄区域</button> 
+                <li style="list-style-type: none;">
+                    <input style="margin-top: 5px; float:left" name="area" id="showArea" type="radio" checked>
+                    <h4 style="margin: 0; font-weight: 400;">显示航摄区域</h4>
+                </li>
+                <li style="list-style-type: none;">
+                    <input style="margin-top: 5px; float:left" name="area" id="hideArea" type="radio">
+                    <h4 style="margin: 0; font-weight: 400">隐藏航摄区域</h4>
+                </li>
             </div>
             <div class="input-card" style="width: 140px; bottom:unset; top: 240px;">
-                <h4 style="margin-bottom: 10px; font-weight: 600">显示建筑模型</h4>
-                <button class="btn" id="showBuildings" style="margin-bottom: 5px">{% csrf_token %}点击显示</button> 
+                <button class="btn" id="loadBuildings" style="margin-bottom: 5px">{% csrf_token %}导入建筑模型</button> 
+                <li style="list-style-type: none;">
+                    <input style="margin-top: 5px; float:left" name="building" id="showBuildings" type="radio" checked>
+                    <h4 style="margin: 0; font-weight: 400;">显示建筑模型</h4>
+                </li>
+                <li style="list-style-type: none;">
+                    <input style="margin-top: 5px; float:left" name="building" id="hideBuildings" type="radio">
+                    <h4 style="margin: 0; font-weight: 400">隐藏建筑模型</h4>
+                </li>
             </div>
         </div>
-        <p>hhh</p>
     </body>
 </html>

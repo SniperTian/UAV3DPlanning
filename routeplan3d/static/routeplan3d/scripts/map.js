@@ -6,6 +6,7 @@ function load_map()
         viewMode: '3D', //3D模式
         pitch: 50,
         showBuildingBlock: false,
+        showLabel: false,
     });
     // 引入控件和工具
     AMap.plugin([

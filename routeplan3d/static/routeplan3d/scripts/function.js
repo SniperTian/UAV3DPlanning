@@ -8,12 +8,15 @@ function mouseTool_draw(event){
     //log.info(photoArea.getOptions())
 }
 function chooseArea(){
+    // 重置区域显示状态
+    $("input#showArea").prop("checked", "true");
     // 清除旧选区
     if(photoArea!=null){
         photoArea.destroy();
     }
     // 绘制新选区
     mouseTool.rectangle({
+        zIndex:9,
         strokeColor:'red',
         strokeOpacity:0.5,
         strokeWeight: 6,
@@ -24,18 +27,33 @@ function chooseArea(){
         // strokeDasharray: [30,10],
     })
 }
-
+function showArea(){
+    if(photoArea!=null){
+        photoArea.show();
+    }
+}
+function hideArea(){
+    if(photoArea!=null){
+        photoArea.hide();
+    }
+}
 // 显示建筑模型
-function showBuildings(){
+function loadBuildings(){
+    // 重置图层显示状态
+    $("input#showBuildings").prop("checked", "true");
+    // 删除旧图层
+    if(buildingLayer!=null){
+        map.remove(buildingLayer)
+        buildingLayer = null
+    }
     // region 获取建筑信息
     // 获取选区范围
     var areaBounds = photoArea.getOptions().bounds
     buildingList_gcj02 = getBuildings(areaBounds)
-    // 删除旧图层
+
     // 绘制建筑3D图层
     drawBuildings(buildingList_gcj02)
 }
-
 function getBuildings(areaBounds){
     var sw = areaBounds.getSouthWest() //SouthWest
     var ne = areaBounds.getNorthEast() //NorthEast
@@ -67,7 +85,7 @@ function getBuildings(areaBounds){
         }
     })
     // 建筑坐标转换 wgs84 -> gcj02
-    window.alert(buildingList_wgs84[0]["polygonExterior_wgs84"])
+    //window.alert(buildingList_wgs84[0]["polygonExterior_wgs84"])
     var buildingList_gcj02 = []
     for(var i = 0; i < buildingList_wgs84.length; ++i){
         var building_wgs84 = buildingList_wgs84[i];
@@ -86,15 +104,16 @@ function getBuildings(areaBounds){
     //window.alert(buildingList_gcj02[0]["polygonExterior"])
     return buildingList_gcj02
 }
-
 function drawBuildings(buildingList_gcj02){
     var camera;
     var renderer;
     var scene;
     var meshes = [];
+    //region 数据转换:gcj02-map
     // 数据转换工具
     var customCoords = map.customCoords;
     var buildingList_map = []
+    //window.alert(buildingList_gcj02[0]["polygonExterior"])
     for(var i = 0; i < buildingList_gcj02.length; ++i){
         var building_gcj02 = buildingList_gcj02[i];
         var polygonExterior_gcj02 = building_gcj02["polygonExterior"]
@@ -106,11 +125,9 @@ function drawBuildings(buildingList_gcj02){
             "height": building_gcj02["height"],
         })
     }
-    //window.alert(buildingList_map[0]["polygonExterior"][0])
+    //endregion
 
-
-    // 创建3D图层
-    // 创建 GL 图层
+    // region 创建 GL 图层
     var gllayer = new AMap.GLCustomLayer({
         // 图层的层级
         zIndex: 10,
@@ -127,10 +144,10 @@ function drawBuildings(buildingList_gcj02){
             );
 
             renderer = new THREE.WebGLRenderer({
-            context: gl, // 地图的 gl 上下文
-            // alpha: true,
-            // antialias: true,
-            // canvas: gl.canvas,
+                context: gl, // 地图的 gl 上下文
+                // alpha: true,
+                // antialias: true,
+                // canvas: gl.canvas,
             });
 
             // 自动清空画布这里必须设置为 false，否则地图底图将无法显示
@@ -146,44 +163,61 @@ function drawBuildings(buildingList_gcj02){
             //endregion 相机和场景设置
 
             //region 绘制
-            var bulidingMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-
-            for(var i = 1; i < buildingList_map.length; ++i){
+            // 材质设定
+            var bMaterial = new THREE.MeshPhongMaterial( { 
+                color: '#ffffff',
+                //side: THREE.DoubleSide, 
+                transparent: true,
+                opacity: 0.5,
+            } );
+            // 几何体生成
+            for(var i = 0; i < buildingList_map.length; ++i){
                 var building = buildingList_map[i]
                 var polygonExterior = building["polygonExterior"]
-                var pLength = polygonExterior.length
-                var buildingHeight = 100*building["height"]
-                //window.alert(polygonExterior);
-                //window.alert(buildingHeight);
-                var buildingGeometry = new THREE.BufferGeometry()
-                //
-                var buildingIndices = []
-                for(var j = 0; j < pLength; ++j){
-                    buildingIndices.push(j,j+1,pLength+j)
-                    buildingIndices.push(j+1,pLength+j+1,pLength+j)
-                }
-                //window.alert(buildingIndices)
-
-                buildingGeometry.setIndex(buildingIndices)
-                //
+                var pLength = polygonExterior.length //外环点数
+                var bHeight = building["height"] //建筑高度
+                // 设置几何体顶点
                 var polygonExterior3D = []
+                // 初始化底部
                 for(var j = 0; j < pLength; ++j){
                     point = polygonExterior[j]
                     polygonExterior3D.push(point[0],point[1],0)
                 }
-                for(var j = 0; j < pLength; ++j){
+                // 初始化顶部
+                for(var j = 0; j < pLength; ++j){ 
                     point = polygonExterior[j]
-                    polygonExterior3D.push(point[0],point[1],buildingHeight)
+                    polygonExterior3D.push(point[0],point[1],bHeight)
                 }
-                var buildingVertices = new Float32Array(polygonExterior3D)
-                //window.alert(buildingVertices)
-                buildingGeometry.setAttribute(
-                    'position',
-                    new THREE.BufferAttribute(buildingVertices, 3),
-                )
-                var buildingMesh = new THREE.Mesh(buildingGeometry,bulidingMaterial)
-                meshes.push(buildingMesh)
-                scene.add(buildingMesh)
+                // 设置几何体顶点链接顺序
+                var polygonExterior3D_linkOrder = [] //顶点链接顺序
+                for(var j = 0; j < pLength - 1; ++j){
+                    polygonExterior3D_linkOrder.push(j,pLength+j,j+1)
+                    polygonExterior3D_linkOrder.push(j+1,pLength+j,pLength+j+1)
+                }
+                polygonExterior3D_linkOrder.push(pLength-1,2*pLength-1,0)
+                polygonExterior3D_linkOrder.push(0,2*pLength-1,pLength)
+                // 生成建筑物侧面
+                var bGeometry_side = new THREE.BufferGeometry() //几何体初始化
+                var bVertices = new Float32Array(polygonExterior3D)
+                var bIndices = new Uint16Array(polygonExterior3D_linkOrder)
+                bGeometry_side.attributes.position = new THREE.BufferAttribute(bVertices, 3)
+                bGeometry_side.index = new THREE.BufferAttribute(bIndices,1)
+                var bMesh_side = new THREE.Mesh(bGeometry_side, bMaterial)
+                // 生成建筑物顶部
+                var bShape_Arr = []
+                for(var j = 0; j< pLength; ++j){
+                    point = polygonExterior[j]
+                    bShape_Arr.push(
+                        new THREE.Vector2(point[0],point[1]),
+                    )
+                }
+                var bShape = new THREE.Shape(bShape_Arr)
+                var bGeometry_top = new THREE.ShapeGeometry(bShape)
+                bGeometry_top.translate(x = 0, y = 0, z = bHeight)
+                var bMesh_top = new THREE.Mesh(bGeometry_top, bMaterial)
+                //添加Mesh
+                scene.add(bMesh_side)
+                scene.add(bMesh_top)
             }
             //endregion
         },
@@ -192,7 +226,7 @@ function drawBuildings(buildingList_gcj02){
             renderer.resetState();
             // 重新设置图层的渲染中心点，将模型等物体的渲染中心点重置
             // 否则和 LOCA 可视化等多个图层能力使用的时候会出现物体位置偏移的问题
-            customCoords.setCenter(map.getCenter());
+            //customCoords.setCenter([116.29932,39.98456]);
             var { near, far, fov, up, lookAt, position } =
                 customCoords.getCameraParams();
 
@@ -222,7 +256,14 @@ function drawBuildings(buildingList_gcj02){
             renderer.resetState();
         },
     });
-    map.add(gllayer);
+    //endregion 创建 GL 图层
+
+    // 在地图上添加图层
+    if(buildingLayer != null){
+        map.remove(buildingLayer);//删除旧图层
+    }
+    buildingLayer = gllayer
+    map.add(gllayer);//添加新图层
 
     function onWindowResize() { 
         camera.aspect = window.innerWidth / window.innerHeight; 
@@ -230,4 +271,14 @@ function drawBuildings(buildingList_gcj02){
         renderer.setSize(window.innerWidth, window.innerHeight); 
     } 
     window.addEventListener('resize', onWindowResize);
+}
+function showBuildings(){
+    if(buildingLayer!=null){
+        buildingLayer.show();
+    }
+}
+function hideBuildings(){
+    if(buildingLayer!=null){
+        buildingLayer.hide();
+    }
 }

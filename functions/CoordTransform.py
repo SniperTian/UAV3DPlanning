@@ -24,6 +24,8 @@ def WGS842UTM(lng, lat, zoneNumber = 50, isNorthernHemisphere = True):
     return sPoint.GetY(),sPoint.GetX()
 
 if __name__ == "__main__":
+    shpFile_path = "data_UTM/PKnew.shp"
+    photoArea = UAV3DPlanning(shpFile_path)
     lng_wgs84,lat_wgs84 = 116.29932,39.98456
     lng_utm,lat_utm = WGS842UTM(lng_wgs84,lat_wgs84)
     print(lng_utm,lat_utm)
