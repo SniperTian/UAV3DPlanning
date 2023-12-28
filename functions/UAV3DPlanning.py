@@ -1,7 +1,8 @@
-from . import BuildingManager as BM
+import BuildingManager as BM
 import shapefile
 import numpy as np
 import time
+from AreaPlanning import AreaPathPlanning
 
 class UAV3DPlanning:
     def __init__(self, shpFilePath):
@@ -9,7 +10,7 @@ class UAV3DPlanning:
         self._recordsNum = self._shpFile.numRecords
         self._shapes = self._shpFile.shapes()
         self._area = BM.Area()
-        self._resolution = 2
+        self._resolution = 1
     
     def SetTargetArea(self, targetRegionRect):
         self._area.UpdateTargetRegion(self._shpFile, self._shapes, self._recordsNum, targetRegionRect)
@@ -26,8 +27,11 @@ class UAV3DPlanning:
         pass
     
     def RoutePlan_UrbanReconstruction(self):
-        #pointsList = ..., List中的元素应为point3D对象
-        pass
+        path = AreaPathPlanning(self)
+        pointList = []
+        for vp in path:
+            pointList.append(BM.Point3D(vp[0],vp[1],vp[2]))
+        return path
 
 if __name__ == "__main__":
     start_time = time.time()
@@ -40,5 +44,6 @@ if __name__ == "__main__":
     targetRegion1 = BM.Rectangle(440180, 4426238, 441032, 4427526)
     uavRoutePlan.SetTargetArea(targetRegion1)
     print(uavRoutePlan.GetBuildingsInfo())
-    data1 = uavRoutePlan.GetHeightRaster()
+    # data1 = uavRoutePlan.GetHeightRaster()
+    uavRoutePlan.RoutePlan_UrbanReconstruction()
     
