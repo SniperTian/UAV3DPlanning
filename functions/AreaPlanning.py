@@ -573,11 +573,11 @@ def AreaPathPlanning(uavRoutePlanner):
         for p in res[1:]:
             integratedPath.append(p)
 
-    temp = []
-    for p in integratedPath:
-        temp.append((p._x,p._y,p._z))
-    temp = np.array(temp)
-    showPath(temp, np.arange(temp.shape[0]), 'integratedPath.jpg')
+    # temp = []
+    # for p in integratedPath:
+    #     temp.append((p._x,p._y,p._z))
+    # temp = np.array(temp)
+    # showPath(temp, np.arange(temp.shape[0]), 'integratedPath.jpg')
     return integratedPath
 
 if __name__ == '__main__':
