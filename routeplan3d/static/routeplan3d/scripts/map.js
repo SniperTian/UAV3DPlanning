@@ -2,7 +2,7 @@ function load_map()
 {
     // 加载地图
     map = new AMap.Map('map',{
-        zoom : 13,
+        zoom : 15,
         viewMode: '3D', //3D模式
         pitch: 50,
         showBuildingBlock: false,
