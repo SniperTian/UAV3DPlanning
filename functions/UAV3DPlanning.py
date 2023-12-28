@@ -1,7 +1,8 @@
-import BuildingManager as BM
 import shapefile
 import numpy as np
-import time
+import time,sys
+sys.path.append(".")
+import BuildingManager as BM
 from AreaPlanning import AreaPathPlanning
 
 class UAV3DPlanning:
@@ -31,8 +32,8 @@ class UAV3DPlanning:
         pointsList = []
         for vp in path:
             pointsList.append(BM.Point3D(vp[0],vp[1],vp[2]))
-        sRegionWidth = self._area._targetRegion.x2 - self._area._targetRegion.x1
-        sRegionHeight = self._area._targetRegion.y2 - self._area._targetRegion.y1
+        sRegionWidth = self._area._targetRegion._x2 - self._area._targetRegion._x1
+        sRegionHeight = self._area._targetRegion._y2 - self._area._targetRegion._y1
         sOffsetX = self._area._originX
         sOffsetY = self._area._originY
         UTMpointsList = []
@@ -44,7 +45,7 @@ class UAV3DPlanning:
 
 if __name__ == "__main__":
     start_time = time.time()
-    shpFilePath = "./data/PKnew.shp"
+    shpFilePath = "../data/PKnew.shp"
     uavRoutePlan = UAV3DPlanning(shpFilePath)
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     
     targetRegion1 = BM.Rectangle(440180, 4426238, 441032, 4427526)
     uavRoutePlan.SetTargetArea(targetRegion1)
-    print(uavRoutePlan.GetBuildingsInfo())
+    # print(uavRoutePlan.GetBuildingsInfo())
     # data1 = uavRoutePlan.GetHeightRaster()
     uavRoutePlan.RoutePlan_UrbanReconstruction()
     

@@ -50,6 +50,7 @@
     <body>
         <div class="container">
             <div id="map"></div>
+            <!--选择航摄区域卡片-->
             <div class="input-card" style="width: 140px; bottom:unset; top: 140px;">
                 <button class="btn" id="chooseArea" style="margin-bottom: 5px">选择航摄区域</button> 
                 <li style="list-style-type: none;">
@@ -61,7 +62,8 @@
                     <h4 style="margin: 0; font-weight: 400">隐藏航摄区域</h4>
                 </li>
             </div>
-            <div class="input-card" style="width: 140px; bottom:unset; top: 240px;">
+            <!--显示建筑模型卡片-->
+            <div class="input-card" style="width: 140px; bottom:unset; top: 250px;">
                 <button class="btn" id="loadBuildings" style="margin-bottom: 5px">{% csrf_token %}导入建筑模型</button> 
                 <li style="list-style-type: none;">
                     <input style="margin-top: 5px; float:left" name="building" id="showBuildings" type="radio" checked>
@@ -70,6 +72,18 @@
                 <li style="list-style-type: none;">
                     <input style="margin-top: 5px; float:left" name="building" id="hideBuildings" type="radio">
                     <h4 style="margin: 0; font-weight: 400">隐藏建筑模型</h4>
+                </li>
+            </div>
+            <!--计算航摄路径卡片-->
+            <div class="input-card" style="width: 140px; bottom:unset; top: 360px;">
+                <button class="btn" id="calculateRoute" style="margin-bottom: 5px">{% csrf_token %}计算航摄路径</button> 
+                <li style="list-style-type: none;">
+                    <input style="margin-top: 5px; float:left" name="route" id="showRoute" type="radio" checked>
+                    <h4 style="margin: 0; font-weight: 400;">显示航摄路径</h4>
+                </li>
+                <li style="list-style-type: none;">
+                    <input style="margin-top: 5px; float:left" name="route" id="hideRoute" type="radio">
+                    <h4 style="margin: 0; font-weight: 400">隐藏航摄路径</h4>
                 </li>
             </div>
         </div>

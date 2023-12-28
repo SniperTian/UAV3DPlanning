@@ -1,8 +1,8 @@
-import time
-
-from BuildingManager import Rectangle,Point3D
+import time,sys
 import numpy as np
 import numba
+sys.path.append(".")
+from BuildingManager import Rectangle,Point3D
 
 ImageHeight = 30
 # ImageStep = ImageLength*(1-overlap)
