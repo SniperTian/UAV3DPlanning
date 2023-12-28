@@ -7,10 +7,10 @@ import torch
 import torch.optim as optim
 from  torch.autograd import Variable
 #from replay_buffer import ReplayMemory, Transitio
-from UAV import *
-from model import QNetwork
+from .UAV import *
+from .model import QNetwork
 from osgeo import gdal
-from ReplayBuffer import ReplayMemory, Transition
+from .ReplayBuffer import ReplayMemory, Transition
 
 use_cuda = torch.cuda.is_available()
 FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor

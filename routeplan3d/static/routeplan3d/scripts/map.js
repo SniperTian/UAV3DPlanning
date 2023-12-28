@@ -37,5 +37,5 @@ function load_map()
     map.addControl(geolocation);
     map.addControl(toolbar);
     map.addControl(maptype);
-    geolocation.getCurrentPosition(); //定位到当前位置
+    // geolocation.getCurrentPosition(); //定位到当前位置
 }

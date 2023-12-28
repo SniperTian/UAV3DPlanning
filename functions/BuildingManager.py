@@ -2,7 +2,11 @@ import shapefile
 from shapely.geometry import Polygon
 from osgeo import gdal, osr, ogr
 import numpy as np
-import math
+import math,sys
+
+# TEMPDIR = "./temp/" # 测试版本
+TEMPDIR = "./functions/temp/" # 网页版本
+
 
 class Point3D:
     def __init__(self, x, y, z):
@@ -119,7 +123,7 @@ class Area:
         if(len(self._buildingsList) == 0):
             raise Exception("No buildings found!")
         #(1)创建矢量图层并保存
-        sTempShpFile = shapefile.Writer("./temp/tempPolygon.shp")
+        sTempShpFile = shapefile.Writer(TEMPDIR + "tempPolygon.shp")
         sTempShpFile.field('Elevation', 'F', '19')
         for i in range(len(self._newBuildingsList)):
             sXList, sYList = self._newBuildingsList[i].GetXYCoords()
@@ -130,13 +134,13 @@ class Area:
             sTempShpFile.record(self._newBuildingsList[i]._h)
         sTempShpFile.close()
         #(2)创建raster图层
-        stxtFile = open("./temp/projection.txt")
+        stxtFile = open(TEMPDIR + "projection.txt")
         sprojection = stxtFile.read()
         swidth = math.ceil(self._newTargetRegion._x2 / resolution)
         sheight = math.ceil(self._newTargetRegion._y2 / resolution)
         sgeotrans = (0, resolution, 0, self._newTargetRegion._y2, 0, -resolution) #设置仿射矩阵信息
         sTempRaster = gdal.GetDriverByName('GTiff').Create(
-            utf8_path = "./temp/tempRaster.tif",  #栅格地址
+            utf8_path = TEMPDIR + "tempRaster.tif",  #栅格地址
             xsize = swidth,  #栅格宽
             ysize = sheight,  #栅格高
             bands = 1,  #栅格波段数
@@ -148,7 +152,7 @@ class Area:
         sband.SetNoDataValue(0) #设置背景nodata数值
         sband.FlushCache()
         #(3)矢量转栅格
-        sTempShape = ogr.Open("./temp/tempPolygon.shp") #读取shp文件
+        sTempShape = ogr.Open(TEMPDIR + "tempPolygon.shp") #读取shp文件
         sShpLayer = sTempShape.GetLayer() #获取图层文件对象
         # 栅格化函数
         gdal.RasterizeLayer(

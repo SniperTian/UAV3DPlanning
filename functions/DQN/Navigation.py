@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from Environment import *
+from .Environment import *
 
 class Point3D:
     def __init__(self, x, y, z):

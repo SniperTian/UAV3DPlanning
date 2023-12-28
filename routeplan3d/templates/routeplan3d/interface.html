@@ -76,6 +76,7 @@
             </div>
             <!--计算航摄路径卡片-->
             <div class="input-card" style="width: 140px; bottom:unset; top: 360px;">
+                <button class="btn" id="chooseStartEnd" style="margin-bottom: 5px">{% csrf_token %}选择起点终点</button> 
                 <button class="btn" id="calculateRoute" style="margin-bottom: 5px">{% csrf_token %}计算航摄路径</button> 
                 <li style="list-style-type: none;">
                     <input style="margin-top: 5px; float:left" name="route" id="showRoute" type="radio" checked>

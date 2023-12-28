@@ -1,12 +1,20 @@
 import shapefile
 import numpy as np
 import time,sys
+
+# 网页版本
+from . import BuildingManager as BM
+from .AreaPlanning import AreaPathPlanning
+from .DQN import Navigation
+
+# 测试版本
+'''
 sys.path.append(".")
 import BuildingManager as BM
 from AreaPlanning import AreaPathPlanning
-import sys
-sys.path.append(".")
 from DQN import Navigation
+'''
+
 
 class UAV3DPlanning:
     def __init__(self, shpFilePath):
@@ -29,14 +37,14 @@ class UAV3DPlanning:
     def RoutePlan_Navigation(self, startPointUTM, endPointUTM):
         sOffsetX = self._area._originX
         sOffsetY = self._area._originY
-        sRegionWidth = self._area._targetRegion.x2 - self._area._targetRegion.x1
-        sRegionHeight = self._area._targetRegion.y2 - self._area._targetRegion.y1
+        sRegionWidth = self._area._targetRegion._x2 - self._area._targetRegion._x1
+        sRegionHeight = self._area._targetRegion._y2 - self._area._targetRegion._y1
         sStartPoint = BM.Point3D(int((sOffsetY+sRegionHeight - startPointUTM._y) / self._resolution),
                                  int((startPointUTM._x - sOffsetX) / self._resolution), int(startPointUTM._z))
         sEndPoint = BM.Point3D(int((sOffsetY+sRegionHeight - endPointUTM._y) / self._resolution),
                                  int((endPointUTM._x - sOffsetX) / self._resolution), int(endPointUTM._z))
         sMapData = self.GetHeightRaster()
-        pointsList = Navigation(sMapData, sStartPoint, sEndPoint)
+        pointsList = Navigation.Navigation(sMapData, sStartPoint, sEndPoint)
         UTMpointsList = []
         for point in pointsList:
             sUTMX = sOffsetX + point._y * self._resolution
