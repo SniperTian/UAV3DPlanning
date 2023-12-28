@@ -4,6 +4,9 @@ import time,sys
 sys.path.append(".")
 import BuildingManager as BM
 from AreaPlanning import AreaPathPlanning
+import sys
+sys.path.append(".")
+from DQN import Navigation
 
 class UAV3DPlanning:
     def __init__(self, shpFilePath):
@@ -23,9 +26,23 @@ class UAV3DPlanning:
     def GetHeightRaster(self):
         return self._area.Polygon2Raster(self._resolution)
     
-    def RoutePlan_Navigation(self, startPoint, endPoint):
-        #pointsList = ..., List中的元素应为point3D对象
-        pass
+    def RoutePlan_Navigation(self, startPointUTM, endPointUTM):
+        sOffsetX = self._area._originX
+        sOffsetY = self._area._originY
+        sRegionWidth = self._area._targetRegion.x2 - self._area._targetRegion.x1
+        sRegionHeight = self._area._targetRegion.y2 - self._area._targetRegion.y1
+        sStartPoint = BM.Point3D(int((sOffsetY+sRegionHeight - startPointUTM._y) / self._resolution),
+                                 int((startPointUTM._x - sOffsetX) / self._resolution), int(startPointUTM._z))
+        sEndPoint = BM.Point3D(int((sOffsetY+sRegionHeight - endPointUTM._y) / self._resolution),
+                                 int((endPointUTM._x - sOffsetX) / self._resolution), int(endPointUTM._z))
+        sMapData = self.GetHeightRaster()
+        pointsList = Navigation(sMapData, sStartPoint, sEndPoint)
+        UTMpointsList = []
+        for point in pointsList:
+            sUTMX = sOffsetX + point._y * self._resolution
+            sUTMY = sOffsetY + sRegionHeight - point._x * self._resolution
+            UTMpointsList.append(BM.Point3D(sUTMX, sUTMY, point._z))
+        return UTMpointsList
     
     def RoutePlan_UrbanReconstruction(self):
         path = AreaPathPlanning(self)
