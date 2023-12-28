@@ -11,6 +11,8 @@ GroundGap = 5
 VisibleThreshold = 100
 MinVisualDis = 10
 MaxVisualDis = 50
+TurnRadius = 30
+TurnEfficientCoef = 0.5
 
 @numba.jit(nopython=True)
 def dilationRaster(raster, resolution):
@@ -292,40 +294,76 @@ def getCost(viewPoint):
     return cost
 
 @numba.jit(nopython=True)
-def greedyPath(cost, start=0):
+def getRotationCost(lp, p, rp):
+    a = p - lp
+    b = rp - p
+    angle = np.arccos(np.dot(a, b)/np.linalg.norm(a)/np.linalg.norm(b))
+    if angle < 0:
+        raise NotImplementedError
+    cost = TurnEfficientCoef*TurnRadius*angle
+    return cost
+
+@numba.jit(nopython=True)
+def greedyPath(vpList, cost, start=-1):
     num = cost.shape[0]
+    if start == -1:
+        minxy = -1
+        for i in range(num):
+            xy = vpList[i][0]+vpList[i][1]
+            if xy < minxy or minxy == -1:
+                minxy = xy
+                start = i
+
     path = [start]
-    last = 0
-    remain = [i for i in range(1,num)]
+    remain = [i for i in range(num)]
+    remain.remove(start)
     while remain:
-        minDis = -1
+        minCost = -1
         cur = -1
         for i in remain:
-            if cost[i][last] < minDis or minDis == -1:
+            tempCost = cost[i][path[-1]]
+            if len(path) > 1:
+                tempCost += getRotationCost(vpList[path[-2]], vpList[path[-1]], vpList[i])
+            if tempCost < minCost or minCost == -1:
                 cur = i
-                minDis = cost[i][last]
+                minCost = tempCost
         path.append(cur)
-        last = cur
         remain.remove(cur)
     path = np.array(path)
 
     return path
 
-def modifyPath(cost, path):
+@numba.jit(nopython=True)
+def modifyPath(vpList, cost, path):
     num = len(path)
     change = 0
-    #for gap in range(1, num - 1):
     for gap in range(num-2,0,-1):
-        for start in range(0, num - gap):
+        for start in range(1, num - gap):
             end = start + gap
             old_cost = 0
             new_cost = 0
             if start > 0:
                 old_cost += cost[path[start - 1]][path[start]]
                 new_cost += cost[path[start - 1]][path[end]]
+                # if start > 1:
+                #     old_cost += getRotationCost(vpList[path[start-2]], vpList[path[start-1]], vpList[path[start]])
+                #     new_cost += getRotationCost(vpList[path[start-2]], vpList[path[start-1]], vpList[path[end]])
+                # old_cost += getRotationCost(vpList[path[start-1]], vpList[path[start]], vpList[path[start+1]])
+                # if gap > 1:
+                #     new_cost += getRotationCost(vpList[path[start-1]], vpList[path[end]], vpList[path[start+1]])
+                # else:
+                #     new_cost += getRotationCost(vpList[path[start-1]], vpList[path[end]], vpList[path[start]])
             if end < num - 1:
                 old_cost += cost[path[end]][path[end + 1]]
                 new_cost += cost[path[start]][path[end + 1]]
+                # if end < num - 2:
+                #     old_cost += getRotationCost(vpList[path[end]], vpList[path[end+1]], vpList[path[end+2]])
+                #     new_cost += getRotationCost(vpList[path[start]], vpList[path[end+1]], vpList[path[end+2]])
+                # old_cost += getRotationCost(vpList[path[end-1]], vpList[path[end]], vpList[path[end+1]])
+                # if gap > 1:
+                #     new_cost += getRotationCost(vpList[path[end-1]], vpList[path[start]], vpList[path[end+1]])
+                # else:
+                #     new_cost += getRotationCost(vpList[path[end]], vpList[path[start]], vpList[path[end+1]])
             if new_cost < old_cost:
                 change += 1
                 path[start:end+1] = np.flip(path[start:end+1])
@@ -449,7 +487,7 @@ def testGP(viewPoint, gp, raster, resolution):
         distance /= count
     return count,distance
 
-def showResult(raster, vpList):
+def showResult(raster, vpList, filename):
     xpos = vpList[:,0]
     ypos = vpList[:,1]
     zpos = vpList[:,2]
@@ -464,13 +502,10 @@ def showResult(raster, vpList):
     # ax.plot_surface(x, y, raster, cmap='rainbow')
     ax.plot(xpos, ypos, zpos)
 
-    angle = [(90,0)]
-    # for i in range(0,360,30):
-    #     angle.append((30,i))
-    for i in angle:
-        ax.view_init(elev=i[0],azim=i[1])
-        ax.set_title(f'elev:{i[0]}  azim:{i[1]}')
-        plt.savefig('result_%d_%d.jpg' % (i[0],i[1]))
+    angle = (90,0)
+    ax.view_init(elev=angle[0],azim=angle[1])
+    ax.set_title(f'elev:{angle[0]}  azim:{angle[1]}')
+    plt.savefig(filename)
 
 def AreaPathPlanning(uavRoutePlanner):
     resolution = 1
@@ -506,29 +541,25 @@ def AreaPathPlanning(uavRoutePlanner):
 
     print('selecting view point')
     vpIndex = np.array(selectViewPoint(infoGain))
-
-    # fp = open('path.raw', 'rb')
-    # vpIndex = np.fromfile(fp, dtype=np.int32)
-    # fp.close()
     vpList = vpList[vpIndex, :3]
 
     print('calculating cost between every two view points')
     cost = getCost(vpList)
 
     print('planning connection path')
-    path = greedyPath(cost)
+    path = greedyPath(vpList, cost)
+    print('optimizing path')
     for i in range(10):
-        path, change = modifyPath(cost, path)
+        path, change = modifyPath(vpList, cost, path)
         if change == 0:
             break
-    # showResult(raster, vpList[path])
+    # showResult(raster, vpList[path], 'result_1_modified.jpg')
     return vpList[path]
 
     # newPath = []
     # for index in path:
     #     vp = vpList[index]
     #     newPath.append(Point3D(vp[0],vp[1],vp[2]))
-
 
 if __name__ == '__main__':
     from UAV3DPlanning import UAV3DPlanning
