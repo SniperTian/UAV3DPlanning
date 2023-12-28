@@ -28,10 +28,19 @@ class UAV3DPlanning:
     
     def RoutePlan_UrbanReconstruction(self):
         path = AreaPathPlanning(self)
-        pointList = []
+        pointsList = []
         for vp in path:
-            pointList.append(BM.Point3D(vp[0],vp[1],vp[2]))
-        return path
+            pointsList.append(BM.Point3D(vp[0],vp[1],vp[2]))
+        sRegionWidth = self._area._targetRegion.x2 - self._area._targetRegion.x1
+        sRegionHeight = self._area._targetRegion.y2 - self._area._targetRegion.y1
+        sOffsetX = self._area._originX
+        sOffsetY = self._area._originY
+        UTMpointsList = []
+        for point in pointsList:
+            sUTMX = sOffsetX + point._y * self._resolution
+            sUTMY = sOffsetY + sRegionHeight - point._x * self._resolution
+            UTMpointsList.append(BM.Point3D(sUTMX, sUTMY, point._z))
+        return UTMpointsList
 
 if __name__ == "__main__":
     start_time = time.time()
