@@ -3,13 +3,15 @@ import numpy as np
 import numba
 
 # 网页版本
-from .BuildingManager import Rectangle,Point3D
+# from .BuildingManager import Rectangle,Point3D
+# from .DQN import Navigation
 
 # 测试版本
-'''
+
 sys.path.append(".")
 from BuildingManager import Rectangle,Point3D
-'''
+from DQN import Navigation
+
 
 ImageHeight = 30
 # ImageStep = ImageLength*(1-overlap)
@@ -560,13 +562,23 @@ def AreaPathPlanning(uavRoutePlanner):
         path, change = modifyPath(vpList, cost, path)
         if change == 0:
             break
-    # showResult(raster, vpList[path], 'result_1_modified.jpg')
-    return vpList[path]
 
-    # newPath = []
-    # for index in path:
-    #     vp = vpList[index]
-    #     newPath.append(Point3D(vp[0],vp[1],vp[2]))
+    print('generating navigation path')
+    vpList = vpList[path].astype(np.int32)
+    integratedPath = [Point3D(vpList[0][0], vpList[0][1], vpList[0][2])]
+    for i in range(len(path)-1):
+        startPoint = Point3D(vpList[i][0], vpList[i][1], vpList[i][2])
+        endPoint = Point3D(vpList[i+1][0], vpList[i+1][1], vpList[i+1][2])
+        res = Navigation.Navigation(raster, startPoint, endPoint)
+        for p in res[1:]:
+            integratedPath.append(p)
+
+    temp = []
+    for p in integratedPath:
+        temp.append((p._x,p._y,p._z))
+    temp = np.array(temp)
+    showPath(temp, np.arange(temp.shape[0]), 'integratedPath.jpg')
+    return integratedPath
 
 if __name__ == '__main__':
     from UAV3DPlanning import UAV3DPlanning

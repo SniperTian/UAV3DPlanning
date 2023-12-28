@@ -53,10 +53,7 @@ class UAV3DPlanning:
         return UTMpointsList
     
     def RoutePlan_UrbanReconstruction(self):
-        path = AreaPathPlanning(self)
-        pointsList = []
-        for vp in path:
-            pointsList.append(BM.Point3D(vp[0],vp[1],vp[2]))
+        pointsList = AreaPathPlanning(self)
         sRegionWidth = self._area._targetRegion._x2 - self._area._targetRegion._x1
         sRegionHeight = self._area._targetRegion._y2 - self._area._targetRegion._y1
         sOffsetX = self._area._originX
