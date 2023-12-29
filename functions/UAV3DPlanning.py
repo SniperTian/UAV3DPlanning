@@ -47,8 +47,8 @@ class UAV3DPlanning:
         pointsList = Navigation.Navigation(sMapData, sStartPoint, sEndPoint)
         UTMpointsList = []
         for point in pointsList:
-            sUTMX = sOffsetX + point._y * self._resolution
-            sUTMY = sOffsetY + sRegionHeight - point._x * self._resolution
+            sUTMX = sOffsetX + point._x * self._resolution
+            sUTMY = sOffsetY + sRegionHeight - point._y * self._resolution
             UTMpointsList.append(BM.Point3D(sUTMX, sUTMY, point._z))
         return UTMpointsList
     
@@ -63,8 +63,8 @@ class UAV3DPlanning:
         sOffsetY = self._area._originY
         UTMpointsList = []
         for point in pointsList:
-            sUTMX = sOffsetX + point._y * self._resolution
-            sUTMY = sOffsetY + sRegionHeight - point._x * self._resolution
+            sUTMX = sOffsetX + point._x * self._resolution
+            sUTMY = sOffsetY + sRegionHeight - point._y * self._resolution
             UTMpointsList.append(BM.Point3D(sUTMX, sUTMY, point._z))
         return UTMpointsList
 

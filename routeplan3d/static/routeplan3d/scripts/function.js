@@ -325,40 +325,55 @@ function chooseStartEnd(){
 }
 // endregion选择起终点
 // region计算航摄路径
-function calculateRoute(){
+function calculateObstacleRoute(){
+    log.info("obstacle");
     if(globalThis.endMarker == null){
         log.info('请先确定起终点');
     }
     else{
-        route = getRoute();
-        drawRoute(route);
+        route = getRoute("obstacle");
+        drawRoute(route,"obstacle");
     }
 }
-function getRoute(){
-    var start = globalThis.startMarker.getPosition();
-    var end = globalThis.startMarker.getPosition();
-    var start_wgs84 = coordtransform.gcj02towgs84(start.getLng(),start.getLat())
-    var end_wgs84 = coordtransform.gcj02towgs84(end.getLng(),end.getLat())
-    var upload_data = {
-        "start" : [start_wgs84[0],start_wgs84[1]],
-        "end" : [end_wgs84[0],end_wgs84[1]],
-    }
-    var getRoute_url = "/routeplan3d/get-route"
-    var route_wgs84;
-    $.ajax({
-        async:false,
-        url: getRoute_url,
-        type: "POST",
-        dateType:'json',
-        data: upload_data,
-        headers:{
-            "X-CSRFtoken":$.cookie("csrftoken"),
-        },
-        success:function (data) {
-            log.info("计算航摄路径结束")
-            route_wgs84 = data["route"]
+function calculateAreaRoute(){
+    log.info("area");
+    route = getRoute("area");
+    drawRoute(route,"area");
+}
+function getRoute(rType){
+    log.info(rType)
+    if(rType == "obstacle"){
+        var start = globalThis.startMarker.getPosition();
+        var end = globalThis.startMarker.getPosition();
+        var start_wgs84 = coordtransform.gcj02towgs84(start.getLng(),start.getLat())
+        var end_wgs84 = coordtransform.gcj02towgs84(end.getLng(),end.getLat())
+        var upload_data = {
+            "route_type":"obstacle",
+            "start" : [start_wgs84[0],start_wgs84[1]],
+            "end" : [end_wgs84[0],end_wgs84[1]],
         }
-    })
+    }
+    else if(rType == "area"){
+        var upload_data = {
+            "route_type":"area",
+        }
+    }
+    var route_wgs84;
+    var getRoute_url = "/routeplan3d/get-route";
+        $.ajax({
+            async:false,
+            url: getRoute_url,
+            type: "POST",
+            dateType:'json',
+            data: upload_data,
+            headers:{
+                "X-CSRFtoken":$.cookie("csrftoken"),
+            },
+            success:function (data) {
+                log.info("计算航摄路径结束")
+                route_wgs84 = data["route"]
+            }
+        })
     var route_gcj02 = []
     for(var i = 0; i < route_wgs84.length; ++i){
         var point_wgs84 = route_wgs84[i];
@@ -371,7 +386,7 @@ function getRoute(){
     }
     return route_gcj02
 }
-function drawRoute(route_gcj02){
+function drawRoute(route_gcj02,rType){
     var camera;
     var renderer;
     var scene;
@@ -383,6 +398,7 @@ function drawRoute(route_gcj02){
     for(var i = 0; i < route_gcj02.length; ++i){
         routeLngLatList_gcj02.push(route_gcj02[i]["lnglat"])
     }
+    window.alert(routeLngLatList_gcj02)
     var routeLngLatList_map = customCoords.lngLatsToCoords(routeLngLatList_gcj02);
     var route_map = []
     for(var i = 0; i < route_gcj02.length; ++i){
@@ -485,11 +501,20 @@ function drawRoute(route_gcj02){
     //endregion 创建 GL 图层
 
     // 在地图上添加图层
-    if(globalThis.routeLayer != null){
-        globalThis.map.remove(globalThis.routeLayer);//删除旧图层
+    if(rType == "obstacle"){
+        if(globalThis.obstacleRouteLayer != null){
+            globalThis.map.remove(globalThis.obstacleRouteLayer);//删除旧图层
+        }
+        globalThis.obstacleRouteLayer = gllayer
+        globalThis.map.add(gllayer);//添加新图层
     }
-    globalThis.routeLayer = gllayer
-    globalThis.map.add(gllayer);//添加新图层
+    else if(rType == "area"){
+        if(globalThis.areaRouteLayer != null){
+            globalThis.map.remove(globalThis.areaRouteLayer);//删除旧图层
+        }
+        globalThis.areaRouteLayer = gllayer
+        globalThis.map.add(gllayer);//添加新图层
+    }
 
     function onWindowResize() { 
         camera.aspect = window.innerWidth / window.innerHeight; 
@@ -498,22 +523,32 @@ function drawRoute(route_gcj02){
     } 
     window.addEventListener('resize', onWindowResize);
 }
-function showRoute(){
+function showObstacleRoute(){
     if(globalThis.endMarker!=null){
         globalThis.startMarker.show();
         globalThis.endMarker.show();
     }
-    if(globalThis.routeLayer!=null){
-        globalThis.routeLayer.show();
+    if(globalThis.obstacleRouteLayer!=null){
+        globalThis.obstacleRouteLayer.show();
     }
 }
-function hideRoute(){
+function hideObstacleRoute(){
     if(globalThis.endMarker!=null){
         globalThis.startMarker.hide();
         globalThis.endMarker.hide();
     }
-    if(globalThis.routeLayer!=null){
-        globalThis.routeLayer.hide();
+    if(globalThis.obstacleRouteLayer!=null){
+        globalThis.obstacleRouteLayer.hide();
+    }
+}
+function showAreaRoute(){
+    if(globalThis.areaRouteLayer != null){
+        globalThis.obstacleRouteLayer.show();
+    }
+}
+function hideAreaRoute(){
+    if(globalThis.areaRouteLayer != null){
+        globalThis.obstacleRouteLayer.hide();
     }
 }
 // endregion计算航摄路径

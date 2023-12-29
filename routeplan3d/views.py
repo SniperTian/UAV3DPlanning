@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 
 import os, sys
+os.environ['PROJ_LIB'] = r"D:\anaconda3\Lib\site-packages\osgeo\data\proj"
 sys.path.append("..")
 from functions.UAV3DPlanning import UAV3DPlanning
 from functions.BuildingManager import Rectangle,Point3D
@@ -53,19 +54,23 @@ def get_buildings(request):
     
 def get_route(request):
     global photoArea
-    start_wgs84 = request.POST.getlist("start[]")
-    end_wgs84 = request.POST.getlist("end[]")
-    start_utm = WGS842UTM(
-        lng = float(start_wgs84[0]),
-        lat = float(start_wgs84[1]),
-    )
-    end_utm = WGS842UTM(
-        lng = float(end_wgs84[0]),
-        lat = float(end_wgs84[1]),
-    )
-    startPointUTM = Point3D(start_utm[1],start_utm[0],0)
-    endPointUTM = Point3D(end_utm[1],end_utm[0],0)
-    route_utm = photoArea.RoutePlan_Navigation(startPointUTM,endPointUTM)
+    route_type = request.POST["route_type"]
+    if route_type == "obstacle":
+        start_wgs84 = request.POST.getlist("start[]")
+        end_wgs84 = request.POST.getlist("end[]")
+        start_utm = WGS842UTM(
+            lng = float(start_wgs84[0]),
+            lat = float(start_wgs84[1]),
+        )
+        end_utm = WGS842UTM(
+            lng = float(end_wgs84[0]),
+            lat = float(end_wgs84[1]),
+        )
+        startPointUTM = Point3D(start_utm[1],start_utm[0],0)
+        endPointUTM = Point3D(end_utm[1],end_utm[0],0)
+        route_utm = photoArea.RoutePlan_Navigation(startPointUTM,endPointUTM)
+    elif route_type == "area":   
+        route_utm = photoArea.RoutePlan_UrbanReconstruction()
     route_wgs84 = [{
         "lnglat": UTM2WGS84(point._y,point._x),
         "height": point._z,
