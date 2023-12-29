@@ -562,7 +562,6 @@ def AreaPathPlanning(uavRoutePlanner):
         path, change = modifyPath(vpList, cost, path)
         if change == 0:
             break
-    return vpList[path]
 
     print('generating navigation path')
     vpList = vpList[path].astype(np.int32)

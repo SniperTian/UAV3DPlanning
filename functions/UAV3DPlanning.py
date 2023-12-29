@@ -39,10 +39,20 @@ class UAV3DPlanning:
         sOffsetY = self._area._originY
         sRegionWidth = self._area._targetRegion._x2 - self._area._targetRegion._x1
         sRegionHeight = self._area._targetRegion._y2 - self._area._targetRegion._y1
-        sStartPoint = BM.Point3D(int((sOffsetY+sRegionHeight - startPointUTM._y) / self._resolution),
+        '''sStartPoint = BM.Point3D(int((sOffsetY+sRegionHeight - startPointUTM._y) / self._resolution),
                                  int((startPointUTM._x - sOffsetX) / self._resolution), int(startPointUTM._z))
         sEndPoint = BM.Point3D(int((sOffsetY+sRegionHeight - endPointUTM._y) / self._resolution),
-                                 int((endPointUTM._x - sOffsetX) / self._resolution), int(endPointUTM._z))
+                                 int((endPointUTM._x - sOffsetX) / self._resolution), int(endPointUTM._z))'''
+        sStartPoint = BM.Point3D(
+            x= int((sOffsetY+sRegionHeight - startPointUTM._y) / self._resolution),
+            y= int((startPointUTM._x - sOffsetX) / self._resolution),
+            z= int(startPointUTM._z)
+        )
+        sEndPoint = BM.Point3D(
+            x=int((sOffsetY+sRegionHeight - endPointUTM._y) / self._resolution),
+            y=int((endPointUTM._x - sOffsetX) / self._resolution),
+            z=int(endPointUTM._z)
+        )
         sMapData = self.GetHeightRaster()
         pointsList = Navigation.Navigation(sMapData, sStartPoint, sEndPoint)
         UTMpointsList = []
@@ -53,7 +63,10 @@ class UAV3DPlanning:
         return UTMpointsList
     
     def RoutePlan_UrbanReconstruction(self):
-        pointsList = AreaPathPlanning(self)
+        path = AreaPathPlanning(self)
+        pointsList = []
+        for vp in path:
+            pointsList.append(BM.Point3D(vp[0],vp[1],vp[2]))
         sRegionWidth = self._area._targetRegion._x2 - self._area._targetRegion._x1
         sRegionHeight = self._area._targetRegion._y2 - self._area._targetRegion._y1
         sOffsetX = self._area._originX

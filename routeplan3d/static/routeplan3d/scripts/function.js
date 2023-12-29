@@ -398,7 +398,7 @@ function drawRoute(route_gcj02,rType){
     for(var i = 0; i < route_gcj02.length; ++i){
         routeLngLatList_gcj02.push(route_gcj02[i]["lnglat"])
     }
-    window.alert(routeLngLatList_gcj02)
+    //window.alert(routeLngLatList_gcj02)
     var routeLngLatList_map = customCoords.lngLatsToCoords(routeLngLatList_gcj02);
     var route_map = []
     for(var i = 0; i < route_gcj02.length; ++i){
@@ -451,16 +451,33 @@ function drawRoute(route_gcj02,rType){
             }); 
             // 路径生成
             var routeGeometry = new THREE.BufferGeometry() //几何体初始化
-            var route3D = []
+            //var route3D = []
+            //for(var i = 0; i < route_map.length; ++i){
+            //    var lnglat = route_map[i]["lnglat"]
+            //    var h = route_map[i]["height"]
+            //    route3D.push(lnglat[0],lnglat[1],h)
+            //}
+            //var routeVertices = new Float32Array(route3D)
+            //routeGeometry.attributes.position = new THREE.BufferAttribute(routeVertices, 3)
+            //生成视点和路径
+            var ptMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff00ff
+            });
+            var ptGeometry = new THREE.SphereGeometry( 2, 10, 5 );
+            var viewPointsArr = []
             for(var i = 0; i < route_map.length; ++i){
                 var lnglat = route_map[i]["lnglat"]
                 var h = route_map[i]["height"]
-                route3D.push(lnglat[0],lnglat[1],h)
+                var sphere = new THREE.Mesh( ptGeometry, ptMaterial);
+                sphere.position.set(lnglat[0],lnglat[1],h)
+                scene.add(sphere);
+                viewPointsArr.push(new THREE.Vector3(lnglat[0],lnglat[1],h))
             }
-            var routeVertices = new Float32Array(route3D)
-            routeGeometry.attributes.position = new THREE.BufferAttribute(routeVertices, 3)
-            var routeLine = new THREE.Line(routeGeometry, routeMaterial);
-            scene.add(routeLine);
+            var routeCurve = new THREE.CatmullRomCurve3(viewPointsArr);
+            var routePointsArr = routeCurve.getPoints(1000); 
+            routeGeometry.setFromPoints(routePointsArr)
+            var line = new THREE.Line(routeGeometry, routeMaterial);
+            scene.add(line);
             //endregion
         },
         render: () => {

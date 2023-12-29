@@ -55,7 +55,7 @@ def get_buildings(request):
 def get_route(request):
     global photoArea
     route_type = request.POST["route_type"]
-    if route_type == "obstacle":
+    if(route_type == "obstacle"):
         start_wgs84 = request.POST.getlist("start[]")
         end_wgs84 = request.POST.getlist("end[]")
         start_utm = WGS842UTM(
@@ -66,10 +66,10 @@ def get_route(request):
             lng = float(end_wgs84[0]),
             lat = float(end_wgs84[1]),
         )
-        startPointUTM = Point3D(start_utm[1],start_utm[0],0)
-        endPointUTM = Point3D(end_utm[1],end_utm[0],0)
+        startPointUTM = Point3D(start_utm[1],start_utm[0],3)
+        endPointUTM = Point3D(end_utm[1],end_utm[0],3)
         route_utm = photoArea.RoutePlan_Navigation(startPointUTM,endPointUTM)
-    elif route_type == "area":   
+    elif(route_type == "area"):   
         route_utm = photoArea.RoutePlan_UrbanReconstruction()
     route_wgs84 = [{
         "lnglat": UTM2WGS84(point._y,point._x),

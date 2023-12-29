@@ -19,6 +19,8 @@ def Navigation(raster_data,startPoint,endPoint):
     env.q_local.load_state_dict(check_point_Qlocal['model'])
     env.optim.load_state_dict(check_point_Qlocal['optimizer'])
     dist = abs(endPoint._x-startPoint._x) + abs(endPoint._y-startPoint._y) + abs(endPoint._z-startPoint._z)
+    if dist == 0:
+        return startPoint
     n_test = 10
     state = env.reset_test(startPoint._x,startPoint._y,startPoint._z,endPoint._x,endPoint._y,endPoint._z)
     success_count = 0
@@ -54,18 +56,19 @@ def Navigation(raster_data,startPoint,endPoint):
     final_track = []
     same_dict = {}
     i = 0
-    while(1):
-        flag = False
-        for j in range(i+1,len(cut_track)):
-            if cut_track[i] == cut_track[j]:
-                flag = True
-                same_dict[i] = j
-        if flag:
-            i = same_dict[i]+1
-        else:
-            i = i+1
-        if i == len(cut_track)-1:
-            break
+    if len(cut_track) != 1:
+        while(1):
+            flag = False
+            for j in range(i+1,len(cut_track)):
+                if cut_track[i] == cut_track[j]:
+                    flag = True
+                    same_dict[i] = j
+            if flag:
+                i = same_dict[i]+1
+            else:
+                i = i+1
+            if i == len(cut_track)-1:
+                break
     keys = list(same_dict.keys())
     keys.sort()
     left = 0
